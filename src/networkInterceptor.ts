@@ -127,6 +127,58 @@ function parseResponseHeaders(raw: string): Record<string, string> {
     return result;
 }
 
+// Content-types whose payloads are textual and worth decoding even when the
+// caller asked for arraybuffer/blob (e.g. axios with responseType='arraybuffer'
+// against a JSON endpoint that occasionally returns a file). The runtime has
+// already handled Content-Encoding (gzip/br) by the time we see the bytes.
+function isTextualContentType(ct: string | undefined): boolean {
+    if (!ct) return false;
+    const c = ct.toLowerCase();
+    return (
+        c.startsWith('text/') ||
+        c.includes('json') ||
+        c.includes('xml') ||
+        c.includes('javascript') ||
+        c.includes('x-www-form-urlencoded')
+    );
+}
+
+function parseCharset(ct: string | undefined): string {
+    if (!ct) return 'utf-8';
+    const m = /charset=([^;\s]+)/i.exec(ct);
+    return m ? m[1].toLowerCase().replace(/^"|"$/g, '') : 'utf-8';
+}
+
+function decodeArrayBufferToString(ab: ArrayBuffer, charset: string = 'utf-8'): string | undefined {
+    try {
+        if (typeof TextDecoder !== 'undefined') {
+            try {
+                return new TextDecoder(charset).decode(new Uint8Array(ab));
+            } catch {
+                return new TextDecoder('utf-8').decode(new Uint8Array(ab));
+            }
+        }
+        // Fallback: chunked String.fromCharCode (avoid stack blow-up on large buffers).
+        const view = new Uint8Array(ab);
+        let out = '';
+        const chunk = 0x8000;
+        for (let i = 0; i < view.length; i += chunk) {
+            out += String.fromCharCode.apply(null, Array.from(view.subarray(i, i + chunk)));
+        }
+        return out;
+    } catch {
+        return undefined;
+    }
+}
+
+function getResponseContentType(xhr: XMLHttpRequest): string | undefined {
+    try {
+        return xhr.getResponseHeader('content-type') ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 function extractResponseBody(xhr: XMLHttpRequest): string | undefined {
     try {
         const rt = xhr.responseType;
@@ -140,12 +192,25 @@ function extractResponseBody(xhr: XMLHttpRequest): string | undefined {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const ab = xhr.response as any;
             const size = ab && typeof ab.byteLength === 'number' ? ab.byteLength : null;
+            const ct = getResponseContentType(xhr);
+            if (ab instanceof ArrayBuffer && isTextualContentType(ct)) {
+                const decoded = decodeArrayBufferToString(ab, parseCharset(ct));
+                if (decoded != null) return decoded;
+            }
             return size != null ? `[binary response, ${size} bytes]` : '[binary response]';
         }
         if (rt === 'blob') {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const b = xhr.response as any;
             const size = b && typeof b.size === 'number' ? b.size : null;
+            // Blob.text() is async; we can't await here without changing the
+            // call path. Surface the size + a hint so the agent isn't misled.
+            const ct = getResponseContentType(xhr);
+            if (isTextualContentType(ct)) {
+                return size != null
+                    ? `[textual blob, ${size} bytes — set responseType to 'text' or 'arraybuffer' to capture body]`
+                    : '[textual blob — set responseType to "text" or "arraybuffer" to capture body]';
+            }
             return size != null ? `[binary response, ${size} bytes]` : '[binary response]';
         }
         if (rt === 'document') {
