@@ -2,6 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Repository: https://github.com/igorzheludkov/react-native-ai-devtools-sdk
+
+## Monorepo Context
+
+This repo is part of the **react-native-ai-devtools** monorepo at `~/rn-devtools/`. See [`../CLAUDE.md`](../CLAUDE.md) for the full map and cross-repo workflows.
+
+**Sibling repos:**
+- `react-native-ai-devtools/` — MCP server, primary consumer of this SDK ([GitHub](https://github.com/igorzheludkov/react-native-ai-devtools))
+- `infra/` — Cloudflare Worker backend + analytics dashboard
+- `web/` — web platform (landing, user cabinet)
+- `docs/` — **canonical location for all plans and specs** (`~/rn-devtools/docs/`)
+
+**Plans and specs** must be written to `~/rn-devtools/docs/` (specs → `devtools-core/specs/`, plans → `devtools-core/plans/`). Never store plans/specs inside this repo.
+
 ## Commands
 
 ```bash
