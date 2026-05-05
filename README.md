@@ -1,10 +1,10 @@
 # react-native-ai-devtools-sdk
 
-Lightweight companion SDK for [react-native-ai-devtools](https://www.npmjs.com/package/react-native-ai-devtools) — captures network requests, console logs, and state store references from your React Native app for AI-powered debugging.
+Companion SDK for ExecBro — captures network requests, console logs, and state store references from your React Native app for AI-powered debugging. Ships as the npm package `react-native-ai-devtools-sdk`, pairs with the MCP server `react-native-ai-devtools`.
 
 ## Why use this SDK?
 
-The MCP server (`react-native-ai-devtools`) connects to your app via Chrome DevTools Protocol (CDP). This works great for most features, but CDP has limitations on newer React Native architectures (Expo SDK 52+, Bridgeless):
+The ExecBro MCP server (npm: `react-native-ai-devtools`) connects to your app via Chrome DevTools Protocol (CDP). This works great for most features, but CDP has limitations on newer React Native architectures (Expo SDK 52+, Bridgeless):
 
 | | Without SDK | With SDK |
 |---|---|---|
@@ -143,7 +143,7 @@ React Native App
   |     through to their original implementations unchanged
   |
   v
-MCP Server (react-native-ai-devtools)
+ExecBro MCP Server (npm: react-native-ai-devtools)
   |
   |  3. Connects to app via CDP (Chrome DevTools Protocol)
   |     Detects SDK: typeof globalThis.__RN_AI_DEVTOOLS__?.getNetworkRequests === "function"
@@ -242,9 +242,9 @@ globalThis.__RN_AI_DEVTOOLS__ = {
 
 The SDK has zero native dependencies — it's pure JavaScript that patches standard globals (`fetch`, `console`). It works on any React Native version that supports these globals.
 
-## Relationship to react-native-ai-devtools
+## Relationship to ExecBro
 
-This SDK is an **optional companion** to the [react-native-ai-devtools](https://github.com/nickmcdonnough/react-native-ai-devtools) MCP server. The MCP server works without the SDK — it connects via CDP and provides console logs, component inspection, UI interaction, and basic network tracking out of the box.
+This SDK is an **optional companion** to the ExecBro MCP server (npm: [`react-native-ai-devtools`](https://github.com/igorzheludkov/react-native-ai-devtools)). The MCP server works without the SDK — it connects via CDP and provides console logs, component inspection, UI interaction, and basic network tracking out of the box.
 
 The SDK enhances network and console capture for cases where CDP alone isn't sufficient (Bridgeless architecture, startup request capture, response bodies). When the MCP server detects the SDK, it automatically prefers SDK data. When the SDK is absent, it falls back to CDP.
 
