@@ -1,6 +1,6 @@
 {
   "name": "react-native-ai-devtools-sdk",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Companion SDK for ExecBro (npm: react-native-ai-devtools) — captures network requests for AI-powered React Native debugging.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
