@@ -1,4 +1,19 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+
+jest.mock(
+    'react-native',
+    () => ({
+        I18nManager: { isRTL: false },
+        Dimensions: { get: (k: string) => ({ width: 100, height: 200, scale: 1, fontScale: 1, key: k }) },
+        PixelRatio: { get: () => 2, getFontScale: () => 1 },
+        Platform: { OS: 'ios', Version: 16 },
+        NativeModules: { PlatformConstants: { fake: true } },
+        StyleSheet: { flatten: (s: unknown) => s, create: (s: unknown) => s },
+        AppRegistry: { getAppKeys: () => ['main'] },
+    }),
+    { virtual: true },
+);
+
 import { init, _resetForTesting } from '../src/index';
 import { unpatchXHR } from '../src/networkInterceptor';
 import { unpatchConsole } from '../src/consoleInterceptor';
@@ -143,6 +158,15 @@ describe('integration', () => {
         const ourLog = entries.find((l) => l.message.includes('integration test log'));
         expect(ourLog).toBeDefined();
         expect(ourLog!.level).toBe('log');
+    });
+
+    it('init() exposes __rn__ namespace with RN globals', () => {
+        init();
+
+        const ns = (globalThis as Record<string, unknown>).__rn__ as Record<string, unknown> | undefined;
+        expect(ns).toBeDefined();
+        expect(ns!.I18nManager).toBeDefined();
+        expect((ns!.I18nManager as { isRTL: boolean }).isRTL).toBe(false);
     });
 
     it('clearConsole returns count', () => {
