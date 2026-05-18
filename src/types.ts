@@ -52,3 +52,18 @@ export interface DevToolsGlobal {
     clearNetwork: () => number;
     clearConsole: () => number;
 }
+
+export interface RnGlobalsNamespace {
+    I18nManager: unknown;
+    Dimensions: unknown;
+    PixelRatio: unknown;
+    Platform: unknown;
+    NativeModules: unknown;
+    StyleSheet: unknown;
+    AppRegistry: unknown;
+}
+
+declare global {
+    // eslint-disable-next-line no-var
+    var __rn__: RnGlobalsNamespace | null | undefined;
+}
