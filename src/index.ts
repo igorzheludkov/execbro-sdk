@@ -4,6 +4,7 @@ import { patchXHR, unpatchXHR } from './networkInterceptor';
 import { patchConsole } from './consoleInterceptor';
 import { exposeGlobal } from './global';
 import { exposeRnGlobals } from './rnGlobals';
+import { installFastRefreshRecorder } from './fastRefreshRecorder';
 import { InitOptions } from './types';
 
 export type {
@@ -53,6 +54,7 @@ export function init(options?: InitOptions): void {
     });
 
     exposeRnGlobals();
+    installFastRefreshRecorder();
 
     initialized = true;
 }
@@ -63,4 +65,6 @@ export function _resetForTesting(): void {
     unpatchXHR();
     delete globalThis.__RN_AI_DEVTOOLS__;
     delete (globalThis as Record<string, unknown>).__rn__;
+    delete globalThis.__rn_devtools_hmr_log__;
+    delete globalThis.__rn_devtools_hmr_via__;
 }
