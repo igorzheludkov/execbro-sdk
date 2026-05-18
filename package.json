@@ -18,9 +18,13 @@
   ],
   "author": "Ihor Zheludkov",
   "license": "MIT",
+  "peerDependencies": {
+    "react-native": ">=0.70.0 <1.0.0"
+  },
   "devDependencies": {
     "@jest/globals": "^30.0.0",
     "jest": "^30.0.0",
+    "react-native": ">=0.70.0 <1.0.0",
     "ts-jest": "^29.0.0",
     "typescript": "^5.0.0"
   },

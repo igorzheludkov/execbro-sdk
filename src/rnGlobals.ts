@@ -1,6 +1,3 @@
-// react-native is a peer dependency provided by the host app at runtime.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error - peer dependency resolved by host app
 import { I18nManager, Dimensions, PixelRatio, Platform, NativeModules, StyleSheet, AppRegistry } from 'react-native';
 
 /**
@@ -8,43 +5,24 @@ import { I18nManager, Dimensions, PixelRatio, Platform, NativeModules, StyleShee
  * modules agents most commonly need. Getters re-resolve each access so Fast
  * Refresh cannot strand a stale module reference.
  */
+const ENTRIES: Array<[string, () => unknown]> = [
+    ['I18nManager', () => I18nManager],
+    ['Dimensions', () => Dimensions],
+    ['PixelRatio', () => PixelRatio],
+    ['Platform', () => Platform],
+    ['NativeModules', () => NativeModules],
+    ['StyleSheet', () => StyleSheet],
+    ['AppRegistry', () => AppRegistry],
+];
+
 export function exposeRnGlobals(): void {
     const ns: Record<string, unknown> = {};
+    for (const [key, getter] of ENTRIES) {
+        Object.defineProperty(ns, key, {
+            get: getter,
+            enumerable: true,
+            configurable: true,
+        });
+    }
     (globalThis as Record<string, unknown>).__rn__ = ns;
-
-    Object.defineProperty(ns, 'I18nManager', {
-        get: () => I18nManager,
-        enumerable: true,
-        configurable: true,
-    });
-    Object.defineProperty(ns, 'Dimensions', {
-        get: () => Dimensions,
-        enumerable: true,
-        configurable: true,
-    });
-    Object.defineProperty(ns, 'PixelRatio', {
-        get: () => PixelRatio,
-        enumerable: true,
-        configurable: true,
-    });
-    Object.defineProperty(ns, 'Platform', {
-        get: () => Platform,
-        enumerable: true,
-        configurable: true,
-    });
-    Object.defineProperty(ns, 'NativeModules', {
-        get: () => NativeModules,
-        enumerable: true,
-        configurable: true,
-    });
-    Object.defineProperty(ns, 'StyleSheet', {
-        get: () => StyleSheet,
-        enumerable: true,
-        configurable: true,
-    });
-    Object.defineProperty(ns, 'AppRegistry', {
-        get: () => AppRegistry,
-        enumerable: true,
-        configurable: true,
-    });
 }

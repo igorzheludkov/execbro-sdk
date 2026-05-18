@@ -33,7 +33,6 @@ describe('exposeRnGlobals', () => {
     });
 
     it('uses getters that re-resolve the module each access', async () => {
-        // @ts-expect-error - virtual mock, peer dep not installed
         const rn = await import('react-native');
         const { exposeRnGlobals } = await import('../src/rnGlobals');
         exposeRnGlobals();
