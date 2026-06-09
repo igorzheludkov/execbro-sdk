@@ -203,14 +203,6 @@ function extractResponseBody(xhr: XMLHttpRequest): string | undefined {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const b = xhr.response as any;
             const size = b && typeof b.size === 'number' ? b.size : null;
-            // Blob.text() is async; we can't await here without changing the
-            // call path. Surface the size + a hint so the agent isn't misled.
-            const ct = getResponseContentType(xhr);
-            if (isTextualContentType(ct)) {
-                return size != null
-                    ? `[textual blob, ${size} bytes — set responseType to 'text' or 'arraybuffer' to capture body]`
-                    : '[textual blob — set responseType to "text" or "arraybuffer" to capture body]';
-            }
             return size != null ? `[binary response, ${size} bytes]` : '[binary response]';
         }
         if (rt === 'document') {
@@ -298,19 +290,35 @@ export function patchXHR(buffer: NetworkBuffer): void {
                         xhr.getAllResponseHeaders(),
                     );
                     const mimeType = xhr.getResponseHeader('content-type') ?? undefined;
+                    const isTextualBlob =
+                        xhr.responseType === 'blob' &&
+                        isTextualContentType(mimeType) &&
+                        typeof Blob !== 'undefined' &&
+                        xhr.response instanceof Blob;
                     const updates: Partial<NetworkEntry> = {
                         status: xhr.status,
                         statusText: xhr.statusText,
                         duration,
                         responseHeaders,
                         mimeType,
-                        responseBody: extractResponseBody(xhr),
+                        responseBody: isTextualBlob ? undefined : extractResponseBody(xhr),
                         completed: true,
                     };
                     if (xhr.responseURL && xhr.responseURL !== state.url) {
                         updates.responseURL = xhr.responseURL;
                     }
                     buffer.update(state.id, updates);
+                    if (isTextualBlob) {
+                        const blob = xhr.response as Blob;
+                        blob.text().then(
+                            (text) => buffer.update(state.id, { responseBody: text }),
+                            () => buffer.update(state.id, {
+                                responseBody: typeof blob.size === 'number'
+                                    ? `[textual blob, ${blob.size} bytes — failed to read]`
+                                    : '[textual blob — failed to read]',
+                            }),
+                        );
+                    }
                 } catch {
                     buffer.update(state.id, { completed: true });
                 }
