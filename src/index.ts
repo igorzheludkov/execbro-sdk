@@ -63,6 +63,7 @@ export function init(options?: InitOptions): void {
 export function _resetForTesting(): void {
     initialized = false;
     unpatchXHR();
+    delete (globalThis as any).__EXECBRO__;
     delete globalThis.__RN_AI_DEVTOOLS__;
     delete (globalThis as Record<string, unknown>).__rn__;
     delete globalThis.__rn_devtools_hmr_log__;

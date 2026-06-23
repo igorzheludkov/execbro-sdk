@@ -4,6 +4,8 @@ import { DevToolsGlobal, Capabilities } from './types';
 
 declare global {
     // eslint-disable-next-line no-var
+    var __EXECBRO__: DevToolsGlobal | undefined;
+    // eslint-disable-next-line no-var
     var __RN_AI_DEVTOOLS__: DevToolsGlobal | undefined;
 }
 
@@ -31,5 +33,6 @@ export function exposeGlobal(options: ExposeGlobalOptions): void {
         clearConsole: () => consoleBuffer.clear(),
     };
 
-    globalThis.__RN_AI_DEVTOOLS__ = devtools;
+    (globalThis as any).__EXECBRO__ = devtools;
+    globalThis.__RN_AI_DEVTOOLS__ = devtools; // legacy alias — same reference
 }
