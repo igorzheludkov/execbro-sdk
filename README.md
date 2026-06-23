@@ -1,10 +1,10 @@
-# react-native-ai-devtools-sdk
+# execbro-sdk
 
-Companion SDK for ExecBro — captures network requests, console logs, and state store references from your React Native app for AI-powered debugging. Ships as the npm package `react-native-ai-devtools-sdk`, pairs with the MCP server `react-native-ai-devtools`.
+Companion SDK for ExecBro — captures network requests, console logs, and state store references from your React Native app for AI-powered debugging. Ships as the npm package `execbro-sdk`, pairs with the MCP server `execbro`. Legacy `react-native-ai-devtools-sdk` keeps receiving identical builds via mirror-publish.
 
 ## Why use this SDK?
 
-The ExecBro MCP server (npm: `react-native-ai-devtools`) connects to your app via Chrome DevTools Protocol (CDP). This works great for most features, but CDP has limitations on newer React Native architectures (Expo SDK 52+, Bridgeless):
+The ExecBro MCP server (npm: `execbro`) connects to your app via Chrome DevTools Protocol (CDP). This works great for most features, but CDP has limitations on newer React Native architectures (Expo SDK 52+, Bridgeless):
 
 | | Without SDK | With SDK |
 |---|---|---|
@@ -21,15 +21,19 @@ The SDK patches `fetch` and `console` at import time and stores everything in an
 ## Installation
 
 ```bash
-npm install react-native-ai-devtools-sdk
+npm install execbro-sdk
 ```
+
+### Legacy package name
+
+This SDK was previously published as `react-native-ai-devtools-sdk`. The legacy name continues to receive identical builds via mirror-publish — existing installations keep working. New installs should use `execbro-sdk`.
 
 ## Setup
 
 Add to your app's entry file (`index.js`, `App.tsx`, or `app/_layout.tsx` for Expo Router) — **must be the first import**:
 
 ```js
-import { init } from 'react-native-ai-devtools-sdk';
+import { init } from 'execbro-sdk';
 if (__DEV__) {
   init();
 }
@@ -44,7 +48,7 @@ That's it. The MCP tools (`get_network_requests`, `get_logs`, etc.) will automat
 Pass references to your state management stores for direct AI access:
 
 ```js
-import { init } from 'react-native-ai-devtools-sdk';
+import { init } from 'execbro-sdk';
 import { store } from './store'; // Redux store
 import { queryClient } from './queryClient'; // TanStack Query
 
@@ -68,7 +72,7 @@ execute_in_app with expression="globalThis.__RN_AI_DEVTOOLS__.stores.redux.getSt
 Pass your navigation reference for AI-powered navigation inspection:
 
 ```js
-import { init } from 'react-native-ai-devtools-sdk';
+import { init } from 'execbro-sdk';
 import { navigationRef } from './navigation';
 
 if (__DEV__) {
@@ -83,7 +87,7 @@ if (__DEV__) {
 Use `custom` to expose any additional tools, services, or objects that don't belong to stores or navigation (e.g. AsyncStorage, MMKV, analytics):
 
 ```js
-import { init } from 'react-native-ai-devtools-sdk';
+import { init } from 'execbro-sdk';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { storage } from './mmkv';
 
@@ -132,7 +136,7 @@ init({
 ```
 React Native App
   |
-  |  1. import { init } from 'react-native-ai-devtools-sdk'
+  |  1. import { init } from 'execbro-sdk'
   |     → patches globalThis.fetch (captures all network requests)
   |     → patches console.log/warn/error/info/debug (captures all logs)
   |     → stores references to state management stores
@@ -143,7 +147,7 @@ React Native App
   |     through to their original implementations unchanged
   |
   v
-ExecBro MCP Server (npm: react-native-ai-devtools)
+ExecBro MCP Server (npm: execbro)
   |
   |  3. Connects to app via CDP (Chrome DevTools Protocol)
   |     Detects SDK: typeof globalThis.__RN_AI_DEVTOOLS__?.getNetworkEntries === "function"
@@ -241,7 +245,7 @@ The SDK has zero native dependencies — it's pure JavaScript that patches stand
 
 ## Relationship to ExecBro
 
-This SDK is an **optional companion** to the ExecBro MCP server (npm: [`react-native-ai-devtools`](https://github.com/igorzheludkov/react-native-ai-devtools)). The MCP server works without the SDK — it connects via CDP and provides console logs, component inspection, UI interaction, and basic network tracking out of the box.
+This SDK is an **optional companion** to the ExecBro MCP server (npm: [`execbro`](https://github.com/igorzheludkov/execbro)). The MCP server works without the SDK — it connects via CDP and provides console logs, component inspection, UI interaction, and basic network tracking out of the box.
 
 The SDK enhances network and console capture for cases where CDP alone isn't sufficient (Bridgeless architecture, startup request capture, response bodies). When the MCP server detects the SDK, it automatically prefers SDK data. When the SDK is absent, it falls back to CDP.
 

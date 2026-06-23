@@ -28,3 +28,10 @@ jobs:
       - run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Mirror publish to legacy react-native-ai-devtools-sdk
+        run: |
+          npm pkg set name=react-native-ai-devtools-sdk
+          npm publish --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
