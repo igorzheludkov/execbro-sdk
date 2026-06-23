@@ -2,6 +2,13 @@ import { NetworkBuffer } from './networkBuffer';
 import { ConsoleBuffer } from './consoleBuffer';
 import { DevToolsGlobal, Capabilities } from './types';
 
+// Single source of truth for the SDK version: the root package.json.
+// Resolved relative to this file — Metro inlines the JSON at bundle time,
+// Node resolves it from the shipped tarball at runtime. Avoids hand-syncing
+// the version on every release. npm always includes package.json in the tarball.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const SDK_VERSION: string = require('../package.json').version;
+
 declare global {
     // eslint-disable-next-line no-var
     var __EXECBRO__: DevToolsGlobal | undefined;
@@ -22,7 +29,7 @@ export function exposeGlobal(options: ExposeGlobalOptions): void {
     const { networkBuffer, consoleBuffer, stores, navigation, custom, capabilities } = options;
 
     const devtools: DevToolsGlobal = {
-        version: '0.5.3',
+        version: SDK_VERSION,
         capabilities,
         stores,
         navigation,
