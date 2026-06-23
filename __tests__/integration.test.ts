@@ -38,7 +38,7 @@ describe('integration', () => {
         init();
 
         expect(globalThis.__RN_AI_DEVTOOLS__).toBeDefined();
-        expect(globalThis.__RN_AI_DEVTOOLS__!.version).toBe('0.4.0');
+        expect(globalThis.__RN_AI_DEVTOOLS__!.version).toBe(require('../package.json').version);
 
         const xhr = new XMLHttpRequest();
         xhr.open('GET', 'https://api.example.com/test');

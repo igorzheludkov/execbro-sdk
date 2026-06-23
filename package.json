@@ -1,6 +1,6 @@
 {
   "name": "execbro-sdk",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Companion SDK for ExecBro (npm: execbro) — captures network requests for AI-powered React Native debugging.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
