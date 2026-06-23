@@ -1,6 +1,6 @@
 {
   "name": "execbro-sdk",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Companion SDK for ExecBro (npm: execbro) — captures network requests for AI-powered React Native debugging.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,6 +18,10 @@
   ],
   "author": "Ihor Zheludkov",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/igorzheludkov/execbro-sdk.git"
+  },
   "peerDependencies": {
     "react-native": ">=0.70.0 <1.0.0"
   },

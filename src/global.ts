@@ -22,7 +22,7 @@ export function exposeGlobal(options: ExposeGlobalOptions): void {
     const { networkBuffer, consoleBuffer, stores, navigation, custom, capabilities } = options;
 
     const devtools: DevToolsGlobal = {
-        version: '0.5.2',
+        version: '0.5.3',
         capabilities,
         stores,
         navigation,
