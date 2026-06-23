@@ -146,12 +146,11 @@ React Native App
 ExecBro MCP Server (npm: react-native-ai-devtools)
   |
   |  3. Connects to app via CDP (Chrome DevTools Protocol)
-  |     Detects SDK: typeof globalThis.__RN_AI_DEVTOOLS__?.getNetworkRequests === "function"
+  |     Detects SDK: typeof globalThis.__RN_AI_DEVTOOLS__?.getNetworkEntries === "function"
   |
   |  4. MCP tools read SDK data via Runtime.evaluate:
-  |     get_network_requests → globalThis.__RN_AI_DEVTOOLS__.getNetworkRequests()
-  |     get_request_details  → globalThis.__RN_AI_DEVTOOLS__.getNetworkRequest(id)
-  |     get_logs (future)    → globalThis.__RN_AI_DEVTOOLS__.getConsoleLogs()
+  |     get_network_requests → globalThis.__RN_AI_DEVTOOLS__.getNetworkEntries()
+  |     get_logs             → globalThis.__RN_AI_DEVTOOLS__.getConsoleEntries()
   |
   v
 AI Assistant (Claude Code, Cursor, VS Code Copilot, etc.)
@@ -198,7 +197,7 @@ The SDK exposes `globalThis.__RN_AI_DEVTOOLS__` with these methods. You don't ne
 
 ```typescript
 globalThis.__RN_AI_DEVTOOLS__ = {
-  version: '0.2.0',
+  version: '0.5.1',
 
   // Capabilities — tells MCP server what's available
   capabilities: {
@@ -219,14 +218,12 @@ globalThis.__RN_AI_DEVTOOLS__ = {
   custom: { asyncStorage: AsyncStorage, mmkv: storage, ... },
 
   // Network
-  getNetworkRequests(options?),  // { count, method, urlPattern, status }
-  getNetworkRequest(id),          // full details including bodies
-  getNetworkStats(),
-  clearNetwork(),
+  getNetworkEntries(),  // all buffered network entries (incl. headers + bodies)
+  clearNetwork(),       // returns number of entries cleared
 
   // Console
-  getConsoleLogs(options?),      // { count, level, text }
-  clearConsole(),
+  getConsoleEntries(),  // all buffered console entries
+  clearConsole(),       // returns number of entries cleared
 }
 ```
 
