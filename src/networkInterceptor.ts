@@ -310,14 +310,23 @@ export function patchXHR(buffer: NetworkBuffer): void {
                     buffer.update(state.id, updates);
                     if (isTextualBlob) {
                         const blob = xhr.response as Blob;
-                        blob.text().then(
-                            (text) => buffer.update(state.id, { responseBody: text }),
-                            () => buffer.update(state.id, {
-                                responseBody: typeof blob.size === 'number'
-                                    ? `[textual blob, ${blob.size} bytes — failed to read]`
-                                    : '[textual blob — failed to read]',
-                            }),
-                        );
+                        const fail = (): void => buffer.update(state.id, {
+                            responseBody: typeof blob.size === 'number'
+                                ? `[textual blob, ${blob.size} bytes — failed to read]`
+                                : '[textual blob — failed to read]',
+                        });
+                        try {
+                            // RN's Blob polyfill has no .text(); read via FileReader.
+                            const reader = new FileReader();
+                            reader.onload = (): void => buffer.update(state.id, {
+                                responseBody:
+                                    typeof reader.result === 'string' ? reader.result : '',
+                            });
+                            reader.onerror = fail;
+                            reader.readAsText(blob, parseCharset(mimeType));
+                        } catch {
+                            fail();
+                        }
                     }
                 } catch {
                     buffer.update(state.id, { completed: true });

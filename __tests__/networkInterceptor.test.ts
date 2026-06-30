@@ -131,6 +131,66 @@ describe('networkInterceptor (XHR)', () => {
         expect(buffer.getAll()[0].responseBody).toBe('[binary response, 42 bytes]');
     });
 
+    it('reads a textual blob response via FileReader when Blob.text is absent (RN)', async () => {
+        // Simulate React Native: its Blob polyfill has no .text()/.arrayBuffer(),
+        // so the interceptor must fall back to FileReader.readAsText. Node's Blob
+        // DOES have .text(), so we hide it to reproduce the RN environment.
+        const originalBlobText = Blob.prototype.text;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const originalBlobArrayBuffer = (Blob.prototype as any).arrayBuffer;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const OriginalFileReader = (globalThis as any).FileReader;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (Blob.prototype as any).text = undefined;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (Blob.prototype as any).arrayBuffer = undefined;
+
+        class MockFileReader {
+            public result: string | ArrayBuffer | null = null;
+            public onload: (() => void) | null = null;
+            public onerror: (() => void) | null = null;
+            readAsText(blob: Blob): void {
+                // RN's native FileReader decodes the blob off-thread; emulate
+                // with the original Blob.text we hid from the code under test.
+                originalBlobText.call(blob).then(
+                    (t: string) => {
+                        this.result = t;
+                        this.onload?.();
+                    },
+                    () => this.onerror?.(),
+                );
+            }
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (globalThis as any).FileReader = MockFileReader;
+
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.responseType = 'blob';
+            xhr.open('POST', 'https://api.example.com/graphql');
+            xhr.send('{"query":"{ me { id } }"}');
+
+            const payload = JSON.stringify({ data: { me: { id: '1' } } });
+            lastInstance()._fireLoad({
+                status: 200,
+                body: new Blob([payload], { type: 'application/json' }),
+                headers: { 'content-type': 'application/json; charset=utf-8' },
+            });
+
+            // The FileReader read resolves on a microtask — flush before asserting.
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(buffer.getAll()[0].responseBody).toBe(payload);
+        } finally {
+            Blob.prototype.text = originalBlobText;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (Blob.prototype as any).arrayBuffer = originalBlobArrayBuffer;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (globalThis as any).FileReader = OriginalFileReader;
+        }
+    });
+
     it('HTTP 500 is captured without errorType', () => {
         const xhr = new XMLHttpRequest();
         xhr.open('GET', 'https://api.example.com/boom');
