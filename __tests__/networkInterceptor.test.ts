@@ -150,12 +150,16 @@ describe('networkInterceptor (XHR)', () => {
             public result: string | ArrayBuffer | null = null;
             public onload: (() => void) | null = null;
             public onerror: (() => void) | null = null;
-            readAsText(blob: Blob): void {
-                // RN's native FileReader decodes the blob off-thread; emulate
-                // with the original Blob.text we hid from the code under test.
-                originalBlobText.call(blob).then(
-                    (t: string) => {
-                        this.result = t;
+            readAsText(blob: Blob, charset = 'utf-8'): void {
+                // RN's native FileReader decodes the blob off-thread; emulate by
+                // reading the raw bytes via the original Blob.arrayBuffer we hid
+                // from the code under test, then decoding. (We can't reuse the
+                // original Blob.text here: on Node 20 Blob.text() is itself
+                // implemented via Blob.arrayBuffer(), so it rejects once we've
+                // removed arrayBuffer from the prototype — Node 23 doesn't.)
+                originalBlobArrayBuffer.call(blob).then(
+                    (ab: ArrayBuffer) => {
+                        this.result = new TextDecoder(charset).decode(new Uint8Array(ab));
                         this.onload?.();
                     },
                     () => this.onerror?.(),
