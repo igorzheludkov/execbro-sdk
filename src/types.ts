@@ -65,6 +65,7 @@ export interface Capabilities {
     stores: boolean;
     navigation: boolean;
     render: boolean;
+    flowpoints: boolean;
 }
 
 export interface DevToolsGlobal {
@@ -77,6 +78,10 @@ export interface DevToolsGlobal {
     getConsoleEntries: () => ConsoleEntry[];
     clearNetwork: () => number;
     clearConsole: () => number;
+    addFlowpoint: (options: FlowpointOptions) => void;
+    getFlowpointEntries: () => FlowpointEntry[];
+    getFlowpointSnapshot: () => FlowpointSnapshot;
+    clearFlowpoints: () => number;
 }
 
 export interface RnGlobalsNamespace {

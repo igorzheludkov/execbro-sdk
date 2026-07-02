@@ -1,5 +1,6 @@
 import { NetworkBuffer } from './networkBuffer';
 import { ConsoleBuffer } from './consoleBuffer';
+import { FlowpointBuffer } from './flowpointBuffer';
 import { DevToolsGlobal, Capabilities } from './types';
 
 // Single source of truth for the SDK version: the root package.json.
@@ -19,6 +20,7 @@ declare global {
 export interface ExposeGlobalOptions {
     networkBuffer: NetworkBuffer;
     consoleBuffer: ConsoleBuffer;
+    flowpointBuffer: FlowpointBuffer;
     stores: Record<string, unknown>;
     navigation: unknown;
     custom: Record<string, unknown>;
@@ -26,7 +28,7 @@ export interface ExposeGlobalOptions {
 }
 
 export function exposeGlobal(options: ExposeGlobalOptions): void {
-    const { networkBuffer, consoleBuffer, stores, navigation, custom, capabilities } = options;
+    const { networkBuffer, consoleBuffer, flowpointBuffer, stores, navigation, custom, capabilities } = options;
 
     const devtools: DevToolsGlobal = {
         version: SDK_VERSION,
@@ -38,6 +40,10 @@ export function exposeGlobal(options: ExposeGlobalOptions): void {
         getConsoleEntries: () => consoleBuffer.getAll(),
         clearNetwork: () => networkBuffer.clear(),
         clearConsole: () => consoleBuffer.clear(),
+        addFlowpoint: (options) => flowpointBuffer.add(options),
+        getFlowpointEntries: () => flowpointBuffer.getAll(),
+        getFlowpointSnapshot: () => flowpointBuffer.getSnapshot(),
+        clearFlowpoints: () => flowpointBuffer.clear(),
     };
 
     (globalThis as any).__EXECBRO__ = devtools;

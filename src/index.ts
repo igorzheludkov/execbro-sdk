@@ -1,5 +1,6 @@
 import { NetworkBuffer } from './networkBuffer';
 import { ConsoleBuffer } from './consoleBuffer';
+import { FlowpointBuffer } from './flowpointBuffer';
 import { patchXHR, unpatchXHR } from './networkInterceptor';
 import { patchConsole } from './consoleInterceptor';
 import { exposeGlobal } from './global';
@@ -7,12 +8,18 @@ import { exposeRnGlobals } from './rnGlobals';
 import { installFastRefreshRecorder } from './fastRefreshRecorder';
 import { InitOptions } from './types';
 
+export { flowpoint } from './flowpoint';
+
 export type {
     InitOptions,
     NetworkEntry,
     ConsoleEntry,
     Capabilities,
     DevToolsGlobal,
+    FlowpointEntry,
+    FlowpointOptions,
+    FlowpointLevel,
+    FlowpointSnapshot,
 } from './types';
 
 let initialized = false;
@@ -31,6 +38,7 @@ export function init(options?: InitOptions): void {
 
     const networkBuffer = new NetworkBuffer(options?.maxNetworkEntries ?? 500);
     const consoleBuffer = new ConsoleBuffer(options?.maxConsoleEntries ?? 500);
+    const flowpointBuffer = new FlowpointBuffer(options?.maxFlowpointEntries ?? 500);
     const stores = options?.stores ?? {};
     const navigation = options?.navigation ?? null;
     const custom = options?.custom ?? {};
@@ -41,6 +49,7 @@ export function init(options?: InitOptions): void {
     exposeGlobal({
         networkBuffer,
         consoleBuffer,
+        flowpointBuffer,
         stores,
         navigation,
         custom,
@@ -50,6 +59,7 @@ export function init(options?: InitOptions): void {
             stores: Object.keys(stores).length > 0,
             navigation: navigation != null,
             render: false,
+            flowpoints: true,
         },
     });
 
