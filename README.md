@@ -111,6 +111,9 @@ init({
   // Max console entries to buffer (default: 500)
   maxConsoleEntries: 500,
 
+  // Max flowpoint entries to buffer (default: 500)
+  maxFlowpointEntries: 500,
+
   // State store references for AI access
   stores: {
     redux: reduxStore,
@@ -128,6 +131,37 @@ init({
   },
 });
 ```
+
+## Flowpoints — instrument and verify flows
+
+`flowpoint()` drops structured, timestamped breadcrumbs grouped by flow, so an AI agent
+(via the ExecBro MCP tools `get_flowpoints`, `wait_for_flowpoint`, `verify_flow`) can
+verify what actually happened inside a flow instead of inferring it from console logs.
+
+```js
+import { flowpoint } from "execbro-sdk";
+
+async function addToCart(item) {
+    flowpoint({ name: "add-to-cart", step: "start", begin: true });
+    await clearCart();
+    flowpoint({ name: "add-to-cart", step: "cleared", meta: { removed: 3 } });
+    try {
+        await addItem(item);
+        flowpoint({ name: "add-to-cart", step: "item-added" });
+    } catch (e) {
+        flowpoint({ name: "add-to-cart", step: "failed", meta: { reason: e.message }, level: "error" });
+    }
+}
+```
+
+- `name` — the flow (grouping key, keep it stable and low-cardinality)
+- `step` — the point within the flow (what verification asserts against)
+- `meta` — optional free-form payload (object, string, anything JSON-ish)
+- `level` — `'info'` (default) | `'warn'` | `'error'`
+- `begin: true` — marks a new run of the flow, separating repeated attempts
+
+Safe to leave in your code: like everything else in this SDK, `flowpoint()` is a
+silent no-op in production builds and costs nothing.
 
 ## How it works
 
@@ -209,6 +243,7 @@ globalThis.__RN_AI_DEVTOOLS__ = {
     console: true,
     stores: true,      // true if stores were passed
     navigation: true,  // true if navigation was passed
+    flowpoints: true,
     render: false,     // future: render profiling
   },
 
@@ -228,6 +263,12 @@ globalThis.__RN_AI_DEVTOOLS__ = {
   // Console
   getConsoleEntries(),  // all buffered console entries
   clearConsole(),       // returns number of entries cleared
+
+  // Flowpoints
+  addFlowpoint(options),     // used by the flowpoint() helper
+  getFlowpointEntries(),     // all buffered flowpoints
+  getFlowpointSnapshot(),    // { contextId, entries } — used by the MCP drain
+  clearFlowpoints(),         // returns number of entries cleared
 }
 ```
 
