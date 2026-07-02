@@ -1,6 +1,7 @@
 export interface InitOptions {
     maxNetworkEntries?: number;
     maxConsoleEntries?: number;
+    maxFlowpointEntries?: number;
     stores?: Record<string, unknown>;
     navigation?: unknown;
     /** Named references to any additional tools, services, or objects (e.g. AsyncStorage, MMKV, analytics) that don't belong to stores or navigation. */
@@ -31,6 +32,31 @@ export interface ConsoleEntry {
     timestamp: number;
     level: 'log' | 'warn' | 'error' | 'info' | 'debug';
     message: string;
+}
+
+export type FlowpointLevel = 'info' | 'warn' | 'error';
+
+export interface FlowpointOptions {
+    name: string;
+    step: string;
+    meta?: unknown;
+    level?: FlowpointLevel;
+    begin?: boolean;
+}
+
+export interface FlowpointEntry {
+    seq: number;
+    t: number;
+    name: string;
+    step: string;
+    run: string;
+    level: FlowpointLevel;
+    meta?: unknown;
+}
+
+export interface FlowpointSnapshot {
+    contextId: string;
+    entries: FlowpointEntry[];
 }
 
 export interface Capabilities {
