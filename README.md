@@ -2,23 +2,29 @@
 
 Companion SDK for ExecBro — captures network requests, console logs, and state store references from your React Native app for AI-powered debugging. Ships as the npm package `execbro-sdk`, pairs with the MCP server `execbro`. Legacy `react-native-ai-devtools-sdk` keeps receiving identical builds via mirror-publish.
 
+> 📖 **More info, guides, and docs: [execbro.com](https://execbro.com)**
+
 ## Why use this SDK?
 
 The ExecBro MCP server (npm: `execbro`) connects to your app via Chrome DevTools Protocol (CDP). This works great for most features, but CDP has limitations on newer React Native architectures (Expo SDK 52+, Bridgeless):
 
-| | Without SDK | With SDK |
-|---|---|---|
-| Startup network requests (auth, config) | Missed | Captured from first fetch |
-| Request/response headers | Partial | Full |
-| Request/response bodies | Not available | Full (including GraphQL) |
-| Console logs from startup | May miss early logs | Captured from first log |
-| State store access | Manual via `execute_in_app` | Direct references exposed |
-| Works on Bridgeless (Expo SDK 52+) | Partial | Full |
-| Setup | None | One import |
+|                                         | Without SDK                 | With SDK                  |
+| --------------------------------------- | --------------------------- | ------------------------- |
+| Startup network requests (auth, config) | Missed                      | Captured from first fetch |
+| Request/response headers                | Partial                     | Full                      |
+| Request/response bodies                 | Not available               | Full (including GraphQL)  |
+| Console logs from startup               | May miss early logs         | Captured from first log   |
+| State store access                      | Manual via `execute_in_app` | Direct references exposed |
+| Works on Bridgeless (Expo SDK 52+)      | Partial                     | Full                      |
+| Setup                                   | None                        | One import                |
 
 The SDK patches `fetch` and `console` at import time and stores everything in an in-app buffer. The MCP server automatically detects the SDK and reads from it — no extra configuration needed.
 
 ## Installation
+
+> **⚠️ Install this package inside your React Native application** — it is an in-app SDK, not a CLI or an editor plugin. It belongs in the `dependencies` of the React Native / Expo app you want to debug, and must be imported from that app's entry file. Installing it anywhere else (globally, in a backend, or next to the MCP server) does nothing.
+
+Run this from the root of your React Native / Expo app:
 
 ```bash
 npm install execbro-sdk
@@ -33,9 +39,9 @@ This SDK was previously published as `react-native-ai-devtools-sdk`. The legacy 
 Add to your app's entry file (`index.js`, `App.tsx`, or `app/_layout.tsx` for Expo Router) — **must be the first import**:
 
 ```js
-import { init } from 'execbro-sdk';
+import { init } from "execbro-sdk";
 if (__DEV__) {
-  init();
+    init();
 }
 
 // ... rest of your imports
@@ -48,21 +54,22 @@ That's it. The MCP tools (`get_network_requests`, `get_logs`, etc.) will automat
 Pass references to your state management stores for direct AI access:
 
 ```js
-import { init } from 'execbro-sdk';
-import { store } from './store'; // Redux store
-import { queryClient } from './queryClient'; // TanStack Query
+import { init } from "execbro-sdk";
+import { store } from "./store"; // Redux store
+import { queryClient } from "./queryClient"; // TanStack Query
 
 if (__DEV__) {
-  init({
-    stores: {
-      redux: store,
-      queryClient: queryClient,
-    },
-  });
+    init({
+        stores: {
+            redux: store,
+            queryClient: queryClient
+        }
+    });
 }
 ```
 
 The AI assistant can then inspect store state directly:
+
 ```
 execute_in_app with expression="globalThis.__RN_AI_DEVTOOLS__.stores.redux.getState()"
 ```
@@ -72,13 +79,13 @@ execute_in_app with expression="globalThis.__RN_AI_DEVTOOLS__.stores.redux.getSt
 Pass your navigation reference for AI-powered navigation inspection:
 
 ```js
-import { init } from 'execbro-sdk';
-import { navigationRef } from './navigation';
+import { init } from "execbro-sdk";
+import { navigationRef } from "./navigation";
 
 if (__DEV__) {
-  init({
-    navigation: navigationRef,
-  });
+    init({
+        navigation: navigationRef
+    });
 }
 ```
 
@@ -87,17 +94,17 @@ if (__DEV__) {
 Use `custom` to expose any additional tools, services, or objects that don't belong to stores or navigation (e.g. AsyncStorage, MMKV, analytics):
 
 ```js
-import { init } from 'execbro-sdk';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { storage } from './mmkv';
+import { init } from "execbro-sdk";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { storage } from "./mmkv";
 
 if (__DEV__) {
-  init({
-    custom: {
-      asyncStorage: AsyncStorage,
-      mmkv: storage,
-    },
-  });
+    init({
+        custom: {
+            asyncStorage: AsyncStorage,
+            mmkv: storage
+        }
+    });
 }
 ```
 
@@ -105,30 +112,30 @@ if (__DEV__) {
 
 ```js
 init({
-  // Max network entries to buffer (default: 500)
-  maxNetworkEntries: 500,
+    // Max network entries to buffer (default: 500)
+    maxNetworkEntries: 500,
 
-  // Max console entries to buffer (default: 500)
-  maxConsoleEntries: 500,
+    // Max console entries to buffer (default: 500)
+    maxConsoleEntries: 500,
 
-  // Max flowpoint entries to buffer (default: 500)
-  maxFlowpointEntries: 500,
+    // Max flowpoint entries to buffer (default: 500)
+    maxFlowpointEntries: 500,
 
-  // State store references for AI access
-  stores: {
-    redux: reduxStore,
-    queryClient: queryClient,
-    userStore: useUserStore,
-  },
+    // State store references for AI access
+    stores: {
+        redux: reduxStore,
+        queryClient: queryClient,
+        userStore: useUserStore
+    },
 
-  // Navigation reference
-  navigation: navigationRef,
+    // Navigation reference
+    navigation: navigationRef,
 
-  // Any additional references for AI access
-  custom: {
-    asyncStorage: AsyncStorage,
-    mmkv: storage,
-  },
+    // Any additional references for AI access
+    custom: {
+        asyncStorage: AsyncStorage,
+        mmkv: storage
+    }
 });
 ```
 
@@ -197,12 +204,14 @@ AI Assistant (Claude Code, Cursor, VS Code Copilot, etc.)
 ### What gets captured
 
 **Network requests** — Every `fetch()` call is intercepted. The SDK captures:
+
 - Method, URL, status, statusText, duration
 - Full request and response headers
 - Full request and response bodies (via `response.clone().text()` — the original response is untouched)
 - Errors and timing
 
 **Console output** — Every `console.log/warn/error/info/debug` call is captured with:
+
 - Log level, timestamp, formatted message
 - Original console methods still work — logs appear in Xcode/Metro/DevTools as normal
 
@@ -274,13 +283,13 @@ globalThis.__RN_AI_DEVTOOLS__ = {
 
 ## Compatibility
 
-| React Native | Architecture | Status |
-|---|---|---|
-| Expo SDK 54+ (RN 0.79+) | Bridgeless | Fully supported |
-| Expo SDK 52-53 (RN 0.76-0.78) | Bridgeless | Fully supported |
-| RN 0.73-0.75 | Hermes + Bridge | Fully supported |
-| RN 0.70-0.72 | Hermes + Bridge | Should work (untested) |
-| RN < 0.70 | JSC | Not tested |
+| React Native                  | Architecture    | Status                 |
+| ----------------------------- | --------------- | ---------------------- |
+| Expo SDK 54+ (RN 0.79+)       | Bridgeless      | Fully supported        |
+| Expo SDK 52-53 (RN 0.76-0.78) | Bridgeless      | Fully supported        |
+| RN 0.73-0.75                  | Hermes + Bridge | Fully supported        |
+| RN 0.70-0.72                  | Hermes + Bridge | Should work (untested) |
+| RN < 0.70                     | JSC             | Not tested             |
 
 The SDK has zero native dependencies — it's pure JavaScript that patches standard globals (`fetch`, `console`). It works on any React Native version that supports these globals.
 
@@ -291,6 +300,7 @@ This SDK is an **optional companion** to the ExecBro MCP server (npm: [`execbro`
 The SDK enhances network and console capture for cases where CDP alone isn't sufficient (Bridgeless architecture, startup request capture, response bodies). When the MCP server detects the SDK, it automatically prefers SDK data. When the SDK is absent, it falls back to CDP.
 
 **You do NOT need the SDK for:**
+
 - Console log viewing (`get_logs`)
 - Component tree inspection (`get_component_tree`, `inspect_component`)
 - UI interaction (`tap`, `swipe`, screenshots)
@@ -298,6 +308,7 @@ The SDK enhances network and console capture for cases where CDP alone isn't suf
 - App reload, bundle error detection, device management
 
 **The SDK improves:**
+
 - Network request capture (especially startup requests and response bodies)
 - Console log capture (startup logs that CDP might miss)
 - State store access (direct references vs manual global inspection)
