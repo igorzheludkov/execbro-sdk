@@ -17,6 +17,7 @@ The ExecBro MCP server (npm: `execbro`) connects to your app via Chrome DevTools
 | State store access                      | Manual via `execute_in_app` | Direct references exposed |
 | Works on Bridgeless (Expo SDK 52+)      | Partial                     | Full                      |
 | Setup                                   | None                        | One import                |
+| Response mocking (`network_mock`)        | Full                        | Full                      |
 
 The SDK patches `fetch` and `console` at import time and stores everything in an in-app buffer. The MCP server automatically detects the SDK and reads from it — no extra configuration needed.
 
@@ -48,6 +49,18 @@ if (__DEV__) {
 ```
 
 That's it. The MCP tools (`get_network_requests`, `get_logs`, etc.) will automatically use the SDK data when available.
+
+### Note on response mocking
+
+`network_mock`, `network_condition` and `network_replay` work identically with
+or without the SDK. Mocking lives in the MCP server's injected interceptor, not
+in this SDK, so installing the SDK neither enables nor disables it.
+
+One presentation difference: with the SDK installed, capture comes from the
+SDK's own buffer under its own request ids, so individual rows are not tagged
+`[MOCK m1]`. The active-rules banner on every network read and the per-rule hit
+counts in `network_mock({action:"list"})` still report that traffic is being
+altered.
 
 ### With state stores
 

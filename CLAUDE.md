@@ -65,6 +65,7 @@ index.ts (init orchestrator)
 - **Console interceptor calls through** to original methods so logs still appear in DevTools/Xcode
 - **`_resetForTesting()`** exported from index for test teardown
 - **ID formats**: `sdk-<random>-<counter>` for network, `con-<random>-<counter>` for console
+- **Response mocking is not this SDK's job** — `network_mock` / `network_condition` / `network_replay` live in the MCP server's injected interceptor and work identically whether or not this SDK is installed. Do not add a mocking layer here: two layers patching the same request would fight, and the server already owns rule state so that rules survive a reload. The only interaction is presentational — because capture then comes from this SDK's buffer under `sdk-*` ids, the server cannot match a mock event to a row, so rows are not tagged `[MOCK]`. The server compensates with an active-rules banner and per-rule hit counts.
 
 ### Build & Publish
 
