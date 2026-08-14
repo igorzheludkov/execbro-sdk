@@ -1,12 +1,14 @@
 # execbro-sdk
 
-Companion SDK for ExecBro — captures network requests, console logs, and state store references from your React Native app for AI-powered debugging. Ships as the npm package `execbro-sdk`, pairs with the MCP server `execbro`. Legacy `react-native-ai-devtools-sdk` keeps receiving identical builds via mirror-publish.
+Companion SDK for ExecBro — optional, but recommended: it supercharges your coding agent by wiring your state stores, navigation, and any custom reference you choose to expose directly into its reach, on top of full network and console capture from your React Native app. Ships as the npm package `execbro-sdk`, pairs with the MCP server `execbro`. Legacy `react-native-ai-devtools-sdk` keeps receiving identical builds via mirror-publish.
 
 > 📖 **More info, guides, and docs: [execbro.com](https://execbro.com)**
 
 ## Why use this SDK?
 
-The ExecBro MCP server (npm: `execbro`) connects to your app via Chrome DevTools Protocol (CDP). This works great for most features, but CDP has limitations on newer React Native architectures (Expo SDK 52+, Bridgeless):
+ExecBro works with zero app changes, but installing this SDK is the single biggest upgrade to what your agent can do. It wires the important parts of your app — state stores, navigation, and any other object you pass in — directly into the agent's reach, so it inspects and controls real app state instead of guessing from the outside.
+
+It also closes gaps in the MCP server's default connection. The server (npm: `execbro`) talks to your app via Chrome DevTools Protocol (CDP), which works great for most features, but CDP has limitations on newer React Native architectures (Expo SDK 52+, Bridgeless):
 
 |                                         | Without SDK                 | With SDK                  |
 | --------------------------------------- | --------------------------- | ------------------------- |
@@ -104,7 +106,7 @@ if (__DEV__) {
 
 ### With custom references
 
-Use `custom` to expose any additional tools, services, or objects that don't belong to stores or navigation (e.g. AsyncStorage, MMKV, analytics):
+Use `custom` to hand the agent direct control over anything that doesn't belong to stores or navigation — AsyncStorage, MMKV, an analytics client, a feature-flag service, your own singletons. Whatever object you pass in, the agent can read from and act through directly:
 
 ```js
 import { init } from "execbro-sdk";
@@ -131,9 +133,6 @@ init({
     // Max console entries to buffer (default: 500)
     maxConsoleEntries: 500,
 
-    // Max flowpoint entries to buffer (default: 500)
-    maxFlowpointEntries: 500,
-
     // State store references for AI access
     stores: {
         redux: reduxStore,
@@ -151,37 +150,6 @@ init({
     }
 });
 ```
-
-## Flowpoints — instrument and verify flows
-
-`flowpoint()` drops structured, timestamped breadcrumbs grouped by flow, so an AI agent
-(via the ExecBro MCP tools `get_flowpoints`, `wait_for_flowpoint`, `verify_flow`) can
-verify what actually happened inside a flow instead of inferring it from console logs.
-
-```js
-import { flowpoint } from "execbro-sdk";
-
-async function addToCart(item) {
-    flowpoint({ name: "add-to-cart", step: "start", begin: true });
-    await clearCart();
-    flowpoint({ name: "add-to-cart", step: "cleared", meta: { removed: 3 } });
-    try {
-        await addItem(item);
-        flowpoint({ name: "add-to-cart", step: "item-added" });
-    } catch (e) {
-        flowpoint({ name: "add-to-cart", step: "failed", meta: { reason: e.message }, level: "error" });
-    }
-}
-```
-
-- `name` — the flow (grouping key, keep it stable and low-cardinality)
-- `step` — the point within the flow (what verification asserts against)
-- `meta` — optional free-form payload (object, string, anything JSON-ish)
-- `level` — `'info'` (default) | `'warn'` | `'error'`
-- `begin: true` — marks a new run of the flow, separating repeated attempts
-
-Safe to leave in your code: like everything else in this SDK, `flowpoint()` is a
-silent no-op in production builds and costs nothing.
 
 ## How it works
 
@@ -265,7 +233,6 @@ globalThis.__RN_AI_DEVTOOLS__ = {
     console: true,
     stores: true,      // true if stores were passed
     navigation: true,  // true if navigation was passed
-    flowpoints: true,
     render: false,     // future: render profiling
   },
 
@@ -285,12 +252,6 @@ globalThis.__RN_AI_DEVTOOLS__ = {
   // Console
   getConsoleEntries(),  // all buffered console entries
   clearConsole(),       // returns number of entries cleared
-
-  // Flowpoints
-  addFlowpoint(options),     // used by the flowpoint() helper
-  getFlowpointEntries(),     // all buffered flowpoints
-  getFlowpointSnapshot(),    // { contextId, entries } — used by the MCP drain
-  clearFlowpoints(),         // returns number of entries cleared
 }
 ```
 
@@ -308,9 +269,9 @@ The SDK has zero native dependencies — it's pure JavaScript that patches stand
 
 ## Relationship to ExecBro
 
-This SDK is an **optional companion** to the ExecBro MCP server (npm: [`execbro`](https://github.com/igorzheludkov/execbro)). The MCP server works without the SDK — it connects via CDP and provides console logs, component inspection, UI interaction, and basic network tracking out of the box.
+This SDK is **optional, but recommended**, alongside the ExecBro MCP server (npm: [`execbro`](https://github.com/igorzheludkov/execbro)). The MCP server works without it — it connects via CDP and provides console logs, component inspection, UI interaction, and basic network tracking out of the box.
 
-The SDK enhances network and console capture for cases where CDP alone isn't sufficient (Bridgeless architecture, startup request capture, response bodies). When the MCP server detects the SDK, it automatically prefers SDK data. When the SDK is absent, it falls back to CDP.
+Installing it supercharges the agent: it wires your state stores, navigation, and any custom references you pass in directly into the agent's reach, turning read-only inspection into direct control over the parts of your app you choose to expose, and it closes CDP's gaps (Bridgeless architecture, startup request capture, response bodies). When the MCP server detects the SDK, it automatically prefers SDK data. When the SDK is absent, it falls back to CDP.
 
 **You do NOT need the SDK for:**
 
@@ -320,11 +281,11 @@ The SDK enhances network and console capture for cases where CDP alone isn't suf
 - JavaScript execution (`execute_in_app`)
 - App reload, bundle error detection, device management
 
-**The SDK improves:**
+**The SDK adds:**
 
 - Network request capture (especially startup requests and response bodies)
 - Console log capture (startup logs that CDP might miss)
-- State store access (direct references vs manual global inspection)
+- Direct control over state stores, navigation, and any custom reference you choose to wire in
 
 ## License
 
